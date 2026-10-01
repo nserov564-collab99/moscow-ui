@@ -287,7 +287,9 @@
         document.getElementById('overlay').style.display = 'block';
         document.getElementById('eventModal').classList.add('active');
         
-        document.getElementById('eventTitle.innerText') = event.type === 'кризис' ? "🔥 ИСТОРИЧЕСКИЙ КРИЗИС" : "📜 ВЫБОР ЭПОХИ";
+        const titleEl = document.getElementById('eventTitle');
+        titleEl.innerText = event.type === 'кризис' ? "🔥 ИСТОРИЧЕСКИЙ КРИЗИС" : "📜 ВЫБОР ЭПОХИ";
+        
         document.getElementById('eventText').innerText = event.text;
         document.getElementById('resultArea').innerHTML = "";
         document.getElementById('nextBtn').style.display = 'none';
