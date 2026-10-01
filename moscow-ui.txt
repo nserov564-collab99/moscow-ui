@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Монополия: Возвышение Москвы</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:wght@300;400;700&display=swap');
+
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background: radial-gradient(circle at center, #2c1e16 0%, #0a0705 100%);
+            color: #f4e4c1; 
+            display: flex; 
+            margin: 0; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        .sidebar { 
+            width: 320px; 
+            background: rgba(26, 17, 12, 0.85); 
+            backdrop-filter: blur(10px);
+            padding: 25px; 
+            border-right: 2px solid rgba(184, 134, 11, 0.5); 
+            overflow-y: auto; 
+            box-shadow: 5px 0 20px rgba(0,0,0,0.8);
+            z-index: 20;
+        }
+        
+        .sidebar h2 { font-family: 'Playfair Display', serif; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .dashboard { 
+            background: linear-gradient(145deg, #2a1d15, #1d140e); 
+            border: 1px solid #b8860b; 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.6);
+            transition: transform 0.3s ease;
+        }
+        .dashboard:hover { transform: translateY(-3px); }
+        .dashboard h3 { margin: 0 0 15px 0; font-family: 'Playfair Display', serif; color: #ffd700; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .stat-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; border-bottom: 1px dashed rgba(184, 134, 11, 0.3); padding-bottom: 4px; }
+
+        .main-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        
+        .board { 
+            width: 700px; 
+            height: 700px; 
+            border: 4px solid #b8860b; 
+            border-radius: 15px;
+            display: grid; 
+            grid-template-columns: repeat(11, 1fr); 
+            grid-template-rows: repeat(11, 1fr); 
+            background: url('https://www.transparenttextures.com/patterns/black-scales.png'), #1e140f; 
+            box-shadow: 0 0 40px rgba(184, 134, 11, 0.2), inset 0 0 50px rgba(0,0,0,0.9); 
+            position: relative; 
+        }
+        
+        .cell { 
+            border: 1px solid rgba(184, 134, 11, 0.15); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 11px; 
+            text-align: center; 
+            position: relative; 
+            transition: all 0.3s ease;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .cell-glow {
+            box-shadow: inset 0 0 25px rgba(255, 215, 0, 0.8) !important;
+            border-color: #ffd700;
+        }
+
+        .pawn { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            position: absolute; 
+            border: 2px solid #fff; 
+            transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            box-shadow: 0 6px 12px rgba(0,0,0,0.8), 0 0 10px currentColor; 
+            z-index: 10; 
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .pawn-trail {
+            position: absolute;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 5;
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            transform: scale(1);
+        }
+
+        .center-controls { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            text-align: center; 
+            background: rgba(15, 10, 7, 0.95); 
+            backdrop-filter: blur(8px);
+            padding: 40px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(184, 134, 11, 0.5); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 20px rgba(184, 134, 11, 0.1);
+        }
+        
+        button { 
+            background: linear-gradient(180deg, #daa520 0%, #b8860b 100%);
+            color: #1a110c; 
+            border: none; 
+            padding: 12px 25px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            cursor: pointer; 
+            border-radius: 8px; 
+            margin-top: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+        button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(184, 134, 11, 0.4); }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
+
+        input {
+            padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #b8860b;
+            background: #2c1e16; color: #fff; outline: none; text-align: center;
+        }
+
+        .modal { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); 
+            background: linear-gradient(135deg, rgba(30, 20, 15, 0.95), rgba(15, 10, 7, 0.98)); 
+            border: 2px solid #b8860b; padding: 40px; border-radius: 15px; z-index: 100; 
+            width: 90%; max-width: 600px; text-align: center; 
+            box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 0 30px rgba(184, 134, 11, 0.2); 
+            opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+        }
+        .modal.active { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        
+        .modal h2 { font-family: 'Playfair Display', serif; font-size: 28px; color: #ffd700; margin-top: 0; }
+        
+        .timer { font-size: 32px; color: #ff4d4d; font-weight: bold; margin: 20px 0; text-shadow: 0 0 10px rgba(255, 77, 77, 0.6); }
+        
+        .option-btn { 
+            display: block; width: 100%; margin: 12px 0; 
+            background: rgba(255, 255, 255, 0.05); 
+            color: #f4e4c1; border: 1px solid rgba(184, 134, 11, 0.5); 
+            padding: 15px; font-weight: normal; text-transform: none; text-align: left;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(184, 134, 11, 0.2); border-color: #ffd700; }
+        
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99; backdrop-filter: blur(3px); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar" id="dashboards">
+    <h2 style="text-align:center; color:#ffd700;">Летопись Думы</h2>
+</div>
+
+<div class="main-area">
+    <div class="board" id="board"></div>
+    
+    <div class="center-controls">
+        <div id="setup-screen">
+            <h2 style="font-family:'Playfair Display', serif; color:#ffd700; margin-top:0;">Начало Эпохи</h2>
+            <input type="text" id="teamName" placeholder="Название княжества">
+            <br>
+            <button onclick="joinGame()">Вступить в борьбу</button>
+        </div>
+        <div id="game-controls" style="display:none;">
+            <h2 id="turn-indicator" style="font-family:'Playfair Display', serif; color:#f4e4c1;">Ожидание хода...</h2>
+            <button id="rollBtn" onclick="rollDice()" disabled>Бросить кости</button>
+        </div>
+    </div>
+</div>
+
+<div id="overlay"></div>
+<div class="modal" id="eventModal">
+    <h2 id="eventTitle">Событие</h2>
+    <p id="eventText" style="font-size: 18px; line-height: 1.5;"></p>
+    <div class="timer" id="timerDisplay">30</div>
+    <div id="optionsContainer"></div>
+    <p id="feedback" style="margin-top:20px; font-weight:bold; font-size: 16px;"></p>
+    <button id="nextBtn" style="display:none; width: 100%;" onclick="closeEvent()">Продолжить путь</button>
+</div>
+
+<script>
+    // ВСТАВЬТЕ ВАШУ ССЫЛКУ С RENDER В СТРОКУ НИЖЕ (ОСТАВЬТЕ КАВЫЧКИ!)
+    const socket = io('https://moscow-game.onrender.com'); 
+    
+    let myId = null;
+    let timerInterval = null;
+    let currentEvent = null;
+    let previousPositions = {}; 
+
+    const avatars = [
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Ivan",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Oleg",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Igor",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Yaroslav"
+    ];
+
+    const board = document.getElementById('board');
+    const cellPositions = []; 
+    
+    for(let i=0; i<11; i++) { cellPositions.push({col: i+1, row: 1}); } 
+    for(let i=1; i<11; i++) { cellPositions.push({col: 11, row: i+1}); } 
+    for(let i=9; i>=0; i--) { cellPositions.push({col: i+1, row: 11}); } 
+    for(let i=9; i>=1; i--) { cellPositions.push({col: 1, row: i+1}); } 
+
+    cellPositions.forEach((pos, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.id = 'cell-' + index;
+        cell.style.gridColumn = pos.col;
+        cell.style.gridRow = pos.row;
+        
+        if(index === 0) { 
+            cell.innerHTML = "<b>МОСКВА</b>"; 
+            cell.style.background = "rgba(184, 134, 11, 0.3)"; 
+        } else if (index % 5 === 0) { 
+            cell.innerText = "СМУТА"; 
+            cell.style.background = "rgba(139, 0, 0, 0.3)"; 
+        } else if (index % 7 === 0) { 
+            cell.innerText = "ШАНС"; 
+            cell.style.background = "rgba(0, 100, 0, 0.3)"; 
+        } else { 
+            cell.innerText = index; 
+        }
+        
+        board.appendChild(cell);
+    });
+
+    socket.on('connect', () => { myId = socket.id; });
+
+    function joinGame() {
+        const name = document.getElementById('teamName').value;
+        if(name) {
+            socket.emit('join_game', {team_name: name});
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('game-controls').style.display = 'block';
+        }
+    }
+
+    function rollDice() {
+        socket.emit('roll_dice');
+        document.getElementById('rollBtn').disabled = true;
+    }
+
+    function createTrail(oldPosIndex, color, avatar) {
+        if(oldPosIndex === undefined) return;
+        const pos = cellPositions[oldPosIndex];
+        const trail = document.createElement('div');
+        trail.className = 'pawn-trail';
+        trail.style.borderColor = color;
+        trail.style.backgroundImage = `url('${avatar}')`;
+        trail.style.left = `calc(${(pos.col - 1) * (100/11)}% + 15px)`;
+        trail.style.top = `calc(${(pos.row - 1) * (100/11)}% + 15px)`;
+        
+        board.appendChild(trail);
+        
+        requestAnimationFrame(() => {
+            trail.style.opacity = '0';
+            trail.style.transform = 'scale(0.5)';
+        });
+        
+        setTimeout(() => trail.remove(), 800);
+    }
+
+    socket.on('update_state', (state) => {
+        const dashboards = document.getElementById('dashboards');
+        dashboards.innerHTML = '<h2 style="text-align:center; color:#ffd700;">Летопись Думы</h2>';
+        
+        document.querySelectorAll('.pawn').forEach(p => p.remove());
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('cell-glow'));
+
+        let i = 0;
+        for (const [id, player] of Object.entries(state.players)) {
+            const avatarUrl = avatars[i % avatars.length];
+            
+            if (previousPositions[id] !== undefined && previousPositions[id] !== player.position) {
+                createTrail(previousPositions[id], player.color, avatarUrl);
+            }
+            previousPositions[id] = player.position;
+
+            const pos = cellPositions[player.position];
+            
+            const activeCell = document.getElementById('cell-' + player.position);
+            if(activeCell) activeCell.classList.add('cell-glow');
+
+            const pawn = document.createElement('div');
+            pawn.className = 'pawn';
+            pawn.style.color = player.color; 
+            pawn.style.borderColor = player.color;
+            pawn.style.backgroundImage = `url('${avatarUrl}'), linear-gradient(${player.color}, ${player.color})`;
+            pawn.style.left = `calc(${(pos.col - 1) * (100/11)}% + 15px + ${i*8}px)`;
+            pawn.style.top = `calc(${(pos.row - 1) * (100/11)}% + 15px + ${i*8}px)`;
+            board.appendChild(pawn);
+
+            dashboards.innerHTML += `
+                <div class="dashboard" style="border-left: 5px solid ${player.color}">
+                    <h3>${player.name}</h3>
+                    <div class="stat-row"><span>Казна:</span> <span style="color:#ffd700">${player.stats.gold}</span></div>
+                    <div class="stat-row"><span>Дружина:</span> <span style="color:#ff4d4d">${player.stats.army}</span></div>
+                    <div class="stat-row"><span>Влияние:</span> <span style="color:#dda0dd">${player.stats.influence}</span></div>
+                    <div class="stat-row"><span>Земли:</span> <span style="color:#90ee90">${player.stats.lands}</span></div>
+                </div>
+            `;
+            i++;
+        }
+
+        if (state.player_order.length > 0) {
+            const currentPlayerId = state.player_order[state.turn_index];
+            const isMyTurn = (currentPlayerId === myId);
+            const currentName = state.players[currentPlayerId].name;
+            
+            document.getElementById('turn-indicator').innerHTML = isMyTurn ? "<span style='color:#ffd700'>ВЕРШИТЕ СУДЬБУ!</span>" : `Ходит: ${currentName}`;
+            document.getElementById('rollBtn').disabled = !isMyTurn;
+        }
+    });
+
+    socket.on('trigger_event', (data) => {
+        if (data.player_id === myId) {
+            try {
+                const event = JSON.parse(data.event);
+                currentEvent = event;
+                showEventModal(event);
+            } catch(e) { console.error("Ошибка парсинга:", e); socket.emit('end_turn'); }
+        }
+    });
+
+    function showEventModal(event) {
+        document.getElementById('overlay').style.display = 'block';
+        const modal = document.getElementById('eventModal');
+        modal.classList.add('active');
+        
+        const titleEl = document.getElementById('eventTitle');
+        if(event.type === 'кризис') {
+            titleEl.innerText = "🔥 УГРОЗА КНЯЖЕСТВУ";
+            titleEl.style.color = "#ff4d4d";
+        } else {
+            titleEl.innerText = "📜 ИСТОРИЧЕСКИЙ ВЫЗОВ";
+            titleEl.style.color = "#ffd700";
+        }
+        
+        document.getElementById('eventText').innerText = event.text;
+        document.getElementById('feedback').innerText = "";
+        document.getElementById('nextBtn').style.display = 'none';
+        
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = "";
+        
+        event.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(index);
+            container.appendChild(btn);
+        });
+
+        let timeLeft = 30;
+        document.getElementById('timerDisplay').innerText = timeLeft;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timerDisplay').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleAnswer(-1); 
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(selectedIndex) {
+        clearInterval(timerInterval);
+        const container = document.getElementById('optionsContainer');
+        const buttons = container.querySelectorAll('.option-btn');
+        
+        buttons.forEach((b, idx) => {
+            b.disabled = true;
+            if (currentEvent.type === 'вопрос') {
+                if(idx === currentEvent.correct_index) b.style.borderColor = "#90ee90";
+                else if (idx === selectedIndex) b.style.borderColor = "#ff4d4d";
+            }
+        });
+
+        const feedbackEl = document.getElementById('feedback');
+        if (currentEvent.type === 'вопрос') {
+            if (selectedIndex === currentEvent.correct_index) {
+                feedbackEl.innerHTML = "<span style='color:#90ee90'>✅ Истина! Влияние растет.</span>";
+            } else {
+                feedbackEl.innerHTML = `<span style='color:#ff4d4d'>❌ Ошибка.</span> Верный ответ: ${currentEvent.options[currentEvent.correct_index]}. <br><br><span style='font-size:14px; color:#ccc'>${currentEvent.explanation}</span>`;
+            }
+        } else {
+            feedbackEl.innerHTML = "<span style='color:#ffd700'>Решение принято. Последствия занесены в летописи.</span>";
+        }
+
+        document.getElementById('nextBtn').style.display = 'block';
+    }
+
+    function closeEvent() {
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('eventModal').classList.remove('active');
+        socket.emit('end_turn'); 
+    }
+</script>
+</body>
+</html>
