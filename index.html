@@ -5,11 +5,11 @@
     <title>Монополия: Возвышение Москвы</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:wght@300;400;500&display=swap');
 
         body { 
             font-family: 'Roboto', sans-serif; 
-            background: radial-gradient(circle at center, #2c1e16 0%, #0a0705 100%);
+            background: #0c0806;
             color: #f4e4c1; 
             display: flex; 
             margin: 0; 
@@ -18,65 +18,61 @@
         }
         
         .sidebar { 
-            width: 320px; 
-            background: rgba(26, 17, 12, 0.85); 
-            backdrop-filter: blur(10px);
-            padding: 25px; 
-            border-right: 2px solid rgba(184, 134, 11, 0.5); 
+            width: 340px; 
+            background: #17100b; 
+            padding: 20px; 
+            border-right: 3px solid #b8860b; 
             overflow-y: auto; 
-            box-shadow: 5px 0 20px rgba(0,0,0,0.8);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.9);
             z-index: 20;
         }
         
-        .sidebar h2 { font-family: 'Playfair Display', serif; text-transform: uppercase; letter-spacing: 2px; }
+        .sidebar h2 { font-family: 'Cinzel', serif; text-transform: uppercase; color: #ffd700; text-align: center; letter-spacing: 2px; margin-bottom: 25px; }
         
         .dashboard { 
-            background: linear-gradient(145deg, #2a1d15, #1d140e); 
+            background: linear-gradient(135deg, #241811, #130d0a); 
             border: 1px solid #b8860b; 
-            border-radius: 12px; 
+            border-radius: 10px; 
             padding: 15px; 
             margin-bottom: 20px;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.6);
-            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+            position: relative;
         }
-        .dashboard:hover { transform: translateY(-3px); }
-        .dashboard h3 { margin: 0 0 15px 0; font-family: 'Playfair Display', serif; color: #ffd700; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .stat-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; border-bottom: 1px dashed rgba(184, 134, 11, 0.3); padding-bottom: 4px; }
+        .dashboard h3 { margin: 0 0 10px 0; font-family: 'Cinzel', serif; color: #ffd700; font-size: 16px; border-bottom: 1px solid rgba(184,134,11,0.3); padding-bottom: 6px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
 
-        .main-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .main-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle at center, #211610 0%, #080504 100%); }
         
         .board { 
-            width: 700px; 
-            height: 700px; 
-            border: 4px solid #b8860b; 
-            border-radius: 15px;
+            width: 720px; 
+            height: 720px; 
+            border: 5px solid #8b6508; 
+            border-radius: 12px;
             display: grid; 
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: repeat(11, 1fr); 
-            background: url('https://www.transparenttextures.com/patterns/black-scales.png'), #1e140f; 
-            box-shadow: 0 0 40px rgba(184, 134, 11, 0.2), inset 0 0 50px rgba(0,0,0,0.9); 
+            background: #120c08; 
+            box-shadow: 0 0 60px rgba(0,0,0,0.9); 
             position: relative; 
         }
         
         .cell { 
-            border: 1px solid rgba(184, 134, 11, 0.15); 
+            border: 1px solid rgba(184, 134, 11, 0.2); 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 11px; 
+            font-size: 10px; 
             text-align: center; 
+            font-weight: 500;
+            color: #dcd0c0;
             position: relative; 
-            transition: all 0.3s ease;
         }
         
-        .cell-glow {
-            box-shadow: inset 0 0 25px rgba(255, 215, 0, 0.8) !important;
-            border-color: #ffd700;
-        }
+        .cell-glow { background: rgba(255, 215, 0, 0.15) !important; border-color: #ffd700 !important; }
 
         .pawn { 
-            width: 34px; 
-            height: 34px; 
+            width: 28px; 
+            height: 28px; 
             border-radius: 50%; 
             position: absolute; 
             border: 2px solid #fff; 
@@ -84,88 +80,81 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px;
             color: #fff;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
-            transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
-            box-shadow: 0 6px 12px rgba(0,0,0,0.8), 0 0 10px currentColor; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            transition: all 0.5s ease-in-out;
             z-index: 10; 
-        }
-        
-        .pawn-trail {
-            position: absolute;
-            width: 34px; height: 34px;
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0.6;
-            z-index: 5;
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-            transform: scale(1);
         }
 
         .center-controls { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             text-align: center; 
-            background: rgba(15, 10, 7, 0.95); 
-            backdrop-filter: blur(8px);
-            padding: 40px; 
-            border-radius: 20px; 
-            border: 1px solid rgba(184, 134, 11, 0.5); 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 20px rgba(184, 134, 11, 0.1);
+            background: rgba(18, 12, 9, 0.95); 
+            padding: 35px; 
+            border-radius: 15px; 
+            border: 2px solid #b8860b; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.9);
+            z-index: 15;
         }
         
         button { 
-            background: linear-gradient(180deg, #daa520 0%, #b8860b 100%);
-            color: #1a110c; 
+            background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+            color: #120c08; 
             border: none; 
-            padding: 12px 25px; 
-            font-size: 16px; 
+            padding: 12px 28px; 
+            font-size: 15px; 
+            font-family: 'Cinzel', serif;
             font-weight: bold; 
-            text-transform: uppercase;
             cursor: pointer; 
-            border-radius: 8px; 
+            border-radius: 6px; 
             margin-top: 15px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             transition: all 0.2s;
         }
-        button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(184, 134, 11, 0.4); }
-        button:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
+        button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
 
         input {
-            padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #b8860b;
-            background: #2c1e16; color: #fff; outline: none; text-align: center;
+            padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #b8860b;
+            background: #0c0806; color: #fff; outline: none; text-align: center; font-family: 'Roboto', sans-serif;
         }
 
         .modal { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); 
-            background: linear-gradient(135deg, rgba(30, 20, 15, 0.95), rgba(15, 10, 7, 0.98)); 
-            border: 2px solid #b8860b; padding: 40px; border-radius: 15px; z-index: 100; 
-            width: 90%; max-width: 600px; text-align: center; 
-            box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 0 30px rgba(184, 134, 11, 0.2); 
-            opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            backdrop-filter: blur(10px);
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #1a120c; 
+            border: 2px solid #ffd700; padding: 35px; border-radius: 12px; z-index: 100; 
+            width: 90%; max-width: 550px; text-align: center; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.9); 
         }
-        .modal.active { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .modal.active { display: block; }
         
-        .modal h2 { font-family: 'Playfair Display', serif; font-size: 28px; color: #ffd700; margin-top: 0; }
+        .modal h2 { font-family: 'Cinzel', serif; font-size: 24px; color: #ffd700; margin-top: 0; }
         
-        .timer { font-size: 32px; color: #ff4d4d; font-weight: bold; margin: 20px 0; text-shadow: 0 0 10px rgba(255, 77, 77, 0.6); }
+        .timer { font-size: 28px; color: #ff6b6b; font-weight: bold; margin: 15px 0; font-family: 'Cinzel', serif; }
         
         .option-btn { 
-            display: block; width: 100%; margin: 12px 0; 
-            background: rgba(255, 255, 255, 0.05); 
-            color: #f4e4c1; border: 1px solid rgba(184, 134, 11, 0.5); 
-            padding: 15px; font-weight: normal; text-transform: none; text-align: left;
+            display: block; width: 100%; margin: 10px 0; 
+            background: #271b13; 
+            color: #f4e4c1; border: 1px solid #b8860b; 
+            padding: 14px; text-align: left; font-size: 14px; border-radius: 6px;
+            cursor: pointer; transition: background 0.2s;
         }
-        .option-btn:hover:not(:disabled) { background: rgba(184, 134, 11, 0.2); border-color: #ffd700; }
+        .option-btn:hover:not(:disabled) { background: #3d291d; border-color: #ffd700; }
         
-        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99; backdrop-filter: blur(3px); }
+        .delta-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; margin-top: 10px;
+        }
+        .delta-pos { background: rgba(0, 128, 0, 0.3); color: #90ee90; border: 1px solid #008000; }
+        .delta-neg { background: rgba(128, 0, 0, 0.3); color: #ff6b6b; border: 1px solid #8b0000; }
+
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99; }
     </style>
 </head>
 <body>
 
 <div class="sidebar" id="dashboards">
-    <h2 style="text-align:center; color:#ffd700;">Летопись Думы</h2>
+    <h2>Летопись Думы</h2>
 </div>
 
 <div class="main-area">
@@ -173,13 +162,13 @@
     
     <div class="center-controls">
         <div id="setup-screen">
-            <h2 style="font-family:'Playfair Display', serif; color:#ffd700; margin-top:0;">Начало Эпохи</h2>
+            <h2 style="font-family:'Cinzel', serif; color:#ffd700; margin-top:0;">Начало Эпохи</h2>
             <input type="text" id="teamName" placeholder="Название княжества">
             <br>
             <button onclick="joinGame()">Вступить в борьбу</button>
         </div>
         <div id="game-controls" style="display:none;">
-            <h2 id="turn-indicator" style="font-family:'Playfair Display', serif; color:#f4e4c1;">Ожидание хода...</h2>
+            <h2 id="turn-indicator" style="font-family:'Cinzel', serif; color:#f4e4c1; font-size: 18px;">Ожидание хода...</h2>
             <button id="rollBtn" onclick="rollDice()" disabled>Бросить кости</button>
         </div>
     </div>
@@ -188,21 +177,18 @@
 <div id="overlay"></div>
 <div class="modal" id="eventModal">
     <h2 id="eventTitle">Событие</h2>
-    <p id="eventText" style="font-size: 18px; line-height: 1.5;"></p>
+    <p id="eventText" style="font-size: 16px; line-height: 1.5;"></p>
     <div class="timer" id="timerDisplay">30</div>
     <div id="optionsContainer"></div>
-    <p id="feedback" style="margin-top:20px; font-weight:bold; font-size: 16px;"></p>
+    <div id="resultArea"></div>
     <button id="nextBtn" style="display:none; width: 100%;" onclick="closeEvent()">Продолжить путь</button>
 </div>
 
 <script>
-    // Вставьте вашу ссылку с Render в кавычки ниже:
-    const socket = io('https://moscow-game.onrender.com'); 
-    
+    const socket = io('https://moscow-game.onrender.com');
     let myId = null;
     let timerInterval = null;
     let currentEvent = null;
-    let previousPositions = {}; 
 
     const board = document.getElementById('board');
     const cellPositions = []; 
@@ -219,18 +205,10 @@
         cell.style.gridColumn = pos.col;
         cell.style.gridRow = pos.row;
         
-        if(index === 0) { 
-            cell.innerHTML = "<b>МОСКВА</b>"; 
-            cell.style.background = "rgba(184, 134, 11, 0.3)"; 
-        } else if (index % 5 === 0) { 
-            cell.innerText = "СМУТА"; 
-            cell.style.background = "rgba(139, 0, 0, 0.3)"; 
-        } else if (index % 7 === 0) { 
-            cell.innerText = "ШАНС"; 
-            cell.style.background = "rgba(0, 100, 0, 0.3)"; 
-        } else { 
-            cell.innerText = index; 
-        }
+        if(index === 0) { cell.innerHTML = "<b>МОСКВА</b>"; cell.style.background = "#2b2015"; } 
+        else if (index % 5 === 0) { cell.innerText = "КРИЗИС"; cell.style.background = "#261010"; } 
+        else if (index % 7 === 0) { cell.innerText = "ШАНС"; cell.style.background = "#102610"; } 
+        else { cell.innerText = index; }
         
         board.appendChild(cell);
     });
@@ -251,28 +229,9 @@
         document.getElementById('rollBtn').disabled = true;
     }
 
-    function createTrail(oldPosIndex, color) {
-        if(oldPosIndex === undefined) return;
-        const pos = cellPositions[oldPosIndex];
-        const trail = document.createElement('div');
-        trail.className = 'pawn-trail';
-        trail.style.backgroundColor = color;
-        trail.style.left = `calc(${(pos.col - 1) * (100/11)}% + 15px)`;
-        trail.style.top = `calc(${(pos.row - 1) * (100/11)}% + 15px)`;
-        
-        board.appendChild(trail);
-        
-        requestAnimationFrame(() => {
-            trail.style.opacity = '0';
-            trail.style.transform = 'scale(0.5)';
-        });
-        
-        setTimeout(() => trail.remove(), 800);
-    }
-
     socket.on('update_state', (state) => {
         const dashboards = document.getElementById('dashboards');
-        dashboards.innerHTML = '<h2 style="text-align:center; color:#ffd700;">Летопись Думы</h2>';
+        dashboards.innerHTML = '<h2>Летопись Думы</h2>';
         
         document.querySelectorAll('.pawn').forEach(p => p.remove());
         document.querySelectorAll('.cell').forEach(c => c.classList.remove('cell-glow'));
@@ -280,12 +239,6 @@
         let i = 0;
         for (const [id, player] of Object.entries(state.players)) {
             const initial = player.name ? player.name.charAt(0).toUpperCase() : 'К';
-            
-            if (previousPositions[id] !== undefined && previousPositions[id] !== player.position) {
-                createTrail(previousPositions[id], player.color);
-            }
-            previousPositions[id] = player.position;
-
             const pos = cellPositions[player.position];
             
             const activeCell = document.getElementById('cell-' + player.position);
@@ -294,17 +247,16 @@
             const pawn = document.createElement('div');
             pawn.className = 'pawn';
             pawn.style.backgroundColor = player.color; 
-            pawn.style.borderColor = "#fff";
             pawn.innerText = initial;
-            pawn.style.left = `calc(${(pos.col - 1) * (100/11)}% + 15px + ${i*8}px)`;
-            pawn.style.top = `calc(${(pos.row - 1) * (100/11)}% + 15px + ${i*8}px)`;
+            pawn.style.left = `calc(${(pos.col - 1) * (100/11)}% + 10px + ${i*10}px)`;
+            pawn.style.top = `calc(${(pos.row - 1) * (100/11)}% + 10px)`;
             board.appendChild(pawn);
 
             dashboards.innerHTML += `
                 <div class="dashboard" style="border-left: 5px solid ${player.color}">
                     <h3>${player.name}</h3>
                     <div class="stat-row"><span>Казна:</span> <span style="color:#ffd700">${player.stats.gold}</span></div>
-                    <div class="stat-row"><span>Дружина:</span> <span style="color:#ff4d4d">${player.stats.army}</span></div>
+                    <div class="stat-row"><span>Дружина:</span> <span style="color:#ff6b6b">${player.stats.army}</span></div>
                     <div class="stat-row"><span>Влияние:</span> <span style="color:#dda0dd">${player.stats.influence}</span></div>
                     <div class="stat-row"><span>Земли:</span> <span style="color:#90ee90">${player.stats.lands}</span></div>
                 </div>
@@ -317,7 +269,7 @@
             const isMyTurn = (currentPlayerId === myId);
             const currentName = state.players[currentPlayerId].name;
             
-            document.getElementById('turn-indicator').innerHTML = isMyTurn ? "<span style='color:#ffd700'>ВЕРШИТЕ СУДЬБУ!</span>" : `Ходит: ${currentName}`;
+            document.getElementById('turn-indicator').innerHTML = isMyTurn ? "<span style='color:#ffd700'>ВАШ ХОД!</span>" : `Ходит: ${currentName}`;
             document.getElementById('rollBtn').disabled = !isMyTurn;
         }
     });
@@ -325,29 +277,19 @@
     socket.on('trigger_event', (data) => {
         if (data.player_id === myId) {
             try {
-                const event = typeof data.event === 'string' ? JSON.parse(data.event) : data.event;
-                currentEvent = event;
-                showEventModal(event);
+                currentEvent = typeof data.event === 'string' ? JSON.parse(data.event) : data.event;
+                showEventModal(currentEvent);
             } catch(e) { console.error("Ошибка парсинга:", e); socket.emit('end_turn'); }
         }
     });
 
     function showEventModal(event) {
         document.getElementById('overlay').style.display = 'block';
-        const modal = document.getElementById('eventModal');
-        modal.classList.add('active');
+        document.getElementById('eventModal').classList.add('active');
         
-        const titleEl = document.getElementById('eventTitle');
-        if(event.type === 'кризис') {
-            titleEl.innerText = "🔥 УГРОЗА КНЯЖЕСТВУ";
-            titleEl.style.color = "#ff4d4d";
-        } else {
-            titleEl.innerText = "📜 ИСТОРИЧЕСКИЙ ВЫЗОВ";
-            titleEl.style.color = "#ffd700";
-        }
-        
+        document.getElementById('eventTitle.innerText') = event.type === 'кризис' ? "🔥 ИСТОРИЧЕСКИЙ КРИЗИС" : "📜 ВЫБОР ЭПОХИ";
         document.getElementById('eventText').innerText = event.text;
-        document.getElementById('feedback').innerText = "";
+        document.getElementById('resultArea').innerHTML = "";
         document.getElementById('nextBtn').style.display = 'none';
         
         const container = document.getElementById('optionsContainer');
@@ -368,7 +310,7 @@
             document.getElementById('timerDisplay').innerText = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                handleAnswer(-1); 
+                handleAnswer(0); 
             }
         }, 1000);
     }
@@ -376,27 +318,22 @@
     function handleAnswer(selectedIndex) {
         clearInterval(timerInterval);
         const container = document.getElementById('optionsContainer');
-        const buttons = container.querySelectorAll('.option-btn');
-        
-        buttons.forEach((b, idx) => {
-            b.disabled = true;
-            if (currentEvent.type === 'вопрос') {
-                if(idx === currentEvent.correct_index) b.style.borderColor = "#90ee90";
-                else if (idx === selectedIndex) b.style.borderColor = "#ff4d4d";
-            }
-        });
+        container.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
 
-        const feedbackEl = document.getElementById('feedback');
-        if (currentEvent.type === 'вопрос') {
-            if (selectedIndex === currentEvent.correct_index) {
-                feedbackEl.innerHTML = "<span style='color:#90ee90'>✅ Истина! Влияние растет.</span>";
-            } else {
-                feedbackEl.innerHTML = `<span style='color:#ff4d4d'>❌ Ошибка.</span> Верный ответ: ${currentEvent.options[currentEvent.correct_index]}. <br><br><span style='font-size:14px; color:#ccc'>${currentEvent.explanation}</span>`;
-            }
-        } else {
-            feedbackEl.innerHTML = "<span style='color:#ffd700'>Решение принято. Последствия занесены в летописи.</span>";
-        }
+        const delta = currentEvent.delta || {"gold": 10, "influence": 5};
+        socket.emit('submit_answer', {delta: delta});
 
+        let deltaHtml = Object.entries(delta).map(([k, v]) => {
+            let label = k === 'gold' ? 'Казна' : k === 'army' ? 'Дружина' : k === 'influence' ? 'Влияние' : 'Земли';
+            let sign = v > 0 ? `+${v}` : v;
+            let cls = v >= 0 ? 'delta-pos' : 'delta-neg';
+            return `<span class="delta-badge ${cls}">${label}: ${sign}</span>`;
+        }).join(' ');
+
+        document.getElementById('resultArea').innerHTML = `
+            <p style="margin-top:15px; color:#f4e4c1; font-size:14px;">${currentEvent.explanation}</p>
+            <div>${deltaHtml}</div>
+        `;
         document.getElementById('nextBtn').style.display = 'block';
     }
 
