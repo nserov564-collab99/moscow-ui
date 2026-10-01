@@ -67,8 +67,6 @@
             text-align: center; 
             position: relative; 
             transition: all 0.3s ease;
-            background-size: cover;
-            background-position: center;
         }
         
         .cell-glow {
@@ -77,21 +75,26 @@
         }
 
         .pawn { 
-            width: 36px; 
-            height: 36px; 
+            width: 34px; 
+            height: 34px; 
             border-radius: 50%; 
             position: absolute; 
             border: 2px solid #fff; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
             transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
             box-shadow: 0 6px 12px rgba(0,0,0,0.8), 0 0 10px currentColor; 
             z-index: 10; 
-            background-size: cover;
-            background-position: center;
         }
         
         .pawn-trail {
             position: absolute;
-            width: 36px; height: 36px;
+            width: 34px; height: 34px;
             border-radius: 50%;
             pointer-events: none;
             opacity: 0.6;
@@ -193,20 +196,13 @@
 </div>
 
 <script>
-    // ВСТАВЬТЕ ВАШУ ССЫЛКУ С RENDER В СТРОКУ НИЖЕ (ОСТАВЬТЕ КАВЫЧКИ!)
+    // Вставьте вашу ссылку с Render в кавычки ниже:
     const socket = io('https://moscow-game.onrender.com'); 
     
     let myId = null;
     let timerInterval = null;
     let currentEvent = null;
     let previousPositions = {}; 
-
-    const avatars = [
-        "https://api.dicebear.com/7.x/bottts/svg?seed=Ivan",
-        "https://api.dicebear.com/7.x/bottts/svg?seed=Oleg",
-        "https://api.dicebear.com/7.x/bottts/svg?seed=Igor",
-        "https://api.dicebear.com/7.x/bottts/svg?seed=Yaroslav"
-    ];
 
     const board = document.getElementById('board');
     const cellPositions = []; 
@@ -255,13 +251,12 @@
         document.getElementById('rollBtn').disabled = true;
     }
 
-    function createTrail(oldPosIndex, color, avatar) {
+    function createTrail(oldPosIndex, color) {
         if(oldPosIndex === undefined) return;
         const pos = cellPositions[oldPosIndex];
         const trail = document.createElement('div');
         trail.className = 'pawn-trail';
-        trail.style.borderColor = color;
-        trail.style.backgroundImage = `url('${avatar}')`;
+        trail.style.backgroundColor = color;
         trail.style.left = `calc(${(pos.col - 1) * (100/11)}% + 15px)`;
         trail.style.top = `calc(${(pos.row - 1) * (100/11)}% + 15px)`;
         
@@ -284,10 +279,10 @@
 
         let i = 0;
         for (const [id, player] of Object.entries(state.players)) {
-            const avatarUrl = avatars[i % avatars.length];
+            const initial = player.name ? player.name.charAt(0).toUpperCase() : 'К';
             
             if (previousPositions[id] !== undefined && previousPositions[id] !== player.position) {
-                createTrail(previousPositions[id], player.color, avatarUrl);
+                createTrail(previousPositions[id], player.color);
             }
             previousPositions[id] = player.position;
 
@@ -298,9 +293,9 @@
 
             const pawn = document.createElement('div');
             pawn.className = 'pawn';
-            pawn.style.color = player.color; 
-            pawn.style.borderColor = player.color;
-            pawn.style.backgroundImage = `url('${avatarUrl}'), linear-gradient(${player.color}, ${player.color})`;
+            pawn.style.backgroundColor = player.color; 
+            pawn.style.borderColor = "#fff";
+            pawn.innerText = initial;
             pawn.style.left = `calc(${(pos.col - 1) * (100/11)}% + 15px + ${i*8}px)`;
             pawn.style.top = `calc(${(pos.row - 1) * (100/11)}% + 15px + ${i*8}px)`;
             board.appendChild(pawn);
@@ -330,7 +325,7 @@
     socket.on('trigger_event', (data) => {
         if (data.player_id === myId) {
             try {
-                const event = JSON.parse(data.event);
+                const event = typeof data.event === 'string' ? JSON.parse(data.event) : data.event;
                 currentEvent = event;
                 showEventModal(event);
             } catch(e) { console.error("Ошибка парсинга:", e); socket.emit('end_turn'); }
