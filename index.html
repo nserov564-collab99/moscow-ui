@@ -82,7 +82,7 @@ const k2 = "bR8SGsZh42Rm97UcjWpF";
 const k3 = "cJqGB5sODuy_5pZN-A";
 const apiKey = k1 + k2 + k3;
     
-   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
     
     const payload = {
         contents: [{ parts: [{ text: prompt }] }],
@@ -115,7 +115,7 @@ const apiKey = k1 + k2 + k3;
             const [localUserId, setLocalUserId] = useState(null);
             const [gameState, setGameState] = useState(null);
             const [newTeamName, setNewTeamName] = useState('');
-            const [timeLeft, setTimeLeft] = useState(0);
+            const [LLeft, setTimeLeft] = useState(0);
             const [isRolling, setIsRolling] = useState(false);
             const [diceRoll, setDiceRoll] = useState(null);
 
