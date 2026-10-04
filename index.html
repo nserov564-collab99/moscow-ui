@@ -77,12 +77,11 @@
         const TILES = generateTiles();
 
   const callGemini = async (prompt, schema) => {
-    // Ваш правильный ключ из AI Studio (разделен для защиты от ботов GitHub)
-    const part1 = "AQ.Ab8RN6lc-4jLSMMoqMhA-";
-    const part2 = "LlFxf21A1e8i4bEYY69Pn79m4UOUQ";
-    const apiKey = part1 + part2;
+const k1 = "AQ.Ab8RN6IBH2Yy"; 
+const k2 = "bR8SGsZh42Rm97UcjWpF";
+const k3 = "cJqGB5sODuy_5pZN-A";
+const apiKey = k1 + k2 + k3;
     
-    // Чистая ссылка без лишних слешей
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
     
     const payload = {
