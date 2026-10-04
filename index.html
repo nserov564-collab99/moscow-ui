@@ -76,32 +76,36 @@
         };
         const TILES = generateTiles();
 
-  const callGemini = async (prompt, schema) => {
-const k1 = "AQ.Ab8RN6IBH2Yy"; 
-const k2 = "bR8SGsZh42Rm97UcjWpF";
-const k3 = "cJqGB5sODuy_5pZN-A";
-const apiKey = k1 + k2 + k3;
-    
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
-    
-    const payload = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json", responseSchema: schema }
-    };
-    try {
-        const response = await fetch(apiUrl, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(payload) 
-        });
-        if (!response.ok) throw new Error(`API Error: ${response.status}`);
-        const data = await response.json();
-        return JSON.parse(data.candidates[0].content.parts[0].text);
-    } catch (error) {
-        console.error("AI Error:", error);
-        return null;
-    }
-};
+        const callGemini = async (prompt, schema) => {
+            const k1 = "AQ.Ab8RN6IBH2Yy"; 
+            const k2 = "bR8SGsZh42Rm97UcjWpF";
+            const k3 = "cJqGB5sODuy_5pZN-A";
+            const apiKey = k1 + k2 + k3;
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json", responseSchema: schema }
+            };
+            try {
+                const response = await fetch(apiUrl, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+                
+                // Очистка текста от возможных маркеров markdown для стабильного парсинга
+                let cleanText = data.candidates[0].content.parts[0].text;
+                cleanText = cleanText.replace(/```json/gi, '').replace(/```/gi, '').trim();
+                return JSON.parse(cleanText);
+            } catch (error) {
+                console.error("AI Error:", error);
+                return null;
+            }
+        };
 
         const aiSchemas = {
             question: { type: "OBJECT", properties: { text: { type: "STRING" }, options: { type: "ARRAY", items: { type: "STRING" } }, correctIndex: { type: "INTEGER" }, explanation: { type: "STRING" } }, required: ["text", "options", "correctIndex", "explanation"] },
@@ -115,7 +119,7 @@ const apiKey = k1 + k2 + k3;
             const [localUserId, setLocalUserId] = useState(null);
             const [gameState, setGameState] = useState(null);
             const [newTeamName, setNewTeamName] = useState('');
-            const [LLeft, setTimeLeft] = useState(0);
+            const [timeLeft, setTimeLeft] = useState(0); // Исправлено имя переменной с LLeft на timeLeft
             const [isRolling, setIsRolling] = useState(false);
             const [diceRoll, setDiceRoll] = useState(null);
 
@@ -228,14 +232,16 @@ const apiKey = k1 + k2 + k3;
                 if (tile.type === 'crisis') {
                     const prompt = `Сгенерируй тяжелый исторический кризис времен Возвышения Москвы. Укажи название, описание и 2 трудных варианта решения.`;
                     const data = await callGemini(prompt, aiSchemas.crisis) || { title: "Набег Орды", description: "Отряд кочевников пересек границу.", options: [{text:"Откупиться", risk:"Потеря казны"}, {text:"Сражаться", risk:"Потери войска"}] };
-                    await updateGame({ eventStatus: 'active', activeEvent: { type: 'crisis', ...data, expiresAt: Date.now() + 30000 } });
+                    // Таймер установлен ровно на 45 секунд
+                    await updateGame({ eventStatus: 'active', activeEvent: { type: 'crisis', ...data, expiresAt: Date.now() + 45000 } });
                     return;
                 }
 
                 if (tile.type === 'question') {
                     const prompt = `Сгенерируй сложный исторический вопрос по истории Москвы для периода: ${tile.period}. Дай 4 варианта ответа, правильный индекс (0-3) и объяснение.`;
                     const data = await callGemini(prompt, aiSchemas.question) || { text: "Вопрос недоступен", options: ["1","2","3","4"], correctIndex: 0, explanation: "Сбой." };
-                    await updateGame({ eventStatus: 'active', activeEvent: { type: 'question', ...data, expiresAt: Date.now() + 30000 } });
+                    // Таймер установлен ровно на 45 секунд
+                    await updateGame({ eventStatus: 'active', activeEvent: { type: 'question', ...data, expiresAt: Date.now() + 45000 } });
                     return;
                 }
             };
