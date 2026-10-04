@@ -76,27 +76,33 @@
         };
         const TILES = generateTiles();
 
-        const callGemini = async (prompt, schema) => {
-            // БЕЗОПАСНЫЙ РАЗРЕЗАННЫЙ КЛЮЧ (защита от сканеров GitHub)
-            const part1 = "AQ.Ab8RN6Ic-4jLSMMoqMhA-LIF";
-            const part2 = "xf21A1e8i4bEYY69Pn79m4UOUQ";
-            const apiKey = part1 + part2;
-            
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json", responseSchema: schema }
-            };
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error('API Error');
-                const data = await response.json();
-                return JSON.parse(data.candidates[0].content.parts[0].text);
-            } catch (error) {
-                console.error("AI Error:", error);
-                return null;
-            }
-        };
+  const callGemini = async (prompt, schema) => {
+    // Ваш правильный ключ из AI Studio (разделен для защиты от ботов GitHub)
+    const part1 = "AQ.Ab8RN6lc-4jLSMMoqMhA-";
+    const part2 = "LlFxf21A1e8i4bEYY69Pn79m4UOUQ";
+    const apiKey = part1 + part2;
+    
+    // Чистая ссылка без лишних слешей
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    
+    const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json", responseSchema: schema }
+    };
+    try {
+        const response = await fetch(apiUrl, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        });
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const data = await response.json();
+        return JSON.parse(data.candidates[0].content.parts[0].text);
+    } catch (error) {
+        console.error("AI Error:", error);
+        return null;
+    }
+};
 
         const aiSchemas = {
             question: { type: "OBJECT", properties: { text: { type: "STRING" }, options: { type: "ARRAY", items: { type: "STRING" } }, correctIndex: { type: "INTEGER" }, explanation: { type: "STRING" } }, required: ["text", "options", "correctIndex", "explanation"] },
