@@ -27,7 +27,6 @@
         .font-display { font-family: 'Playfair Display', serif; }
         .font-condensed { font-family: 'Roboto Condensed', sans-serif; }
         
-        /* Стилизация для кризисов в духе суровой плакатной графики */
         .crisis-bg {
             background: repeating-linear-gradient(
                 -45deg,
@@ -41,18 +40,18 @@
             background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
         }
         
-        /* Анимации */
         @keyframes pulse-red {
             0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.4); }
             50% { box-shadow: 0 0 50px rgba(220, 38, 38, 0.8); }
         }
         .animate-crisis { animation: pulse-red 2s infinite; }
         
-        /* Скроллбар для модальных окон */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #110b08; border-radius: 4px;}
         ::-webkit-scrollbar-thumb { background: #b8860b; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #daa520; }
+        .crisis-scroll::-webkit-scrollbar-thumb { background: #dc2626; }
+        .crisis-scroll::-webkit-scrollbar-thumb:hover { background: #ef4444; }
     </style>
 </head>
 <body class="wood-texture min-h-screen">
@@ -101,7 +100,7 @@
                 { text: "Ход Куликовской битвы висел на волоске, когда ордынская конница прорвала левый фланг русских войск. Ситуацию спас внезапный и сокрушительный удар скрытого резерва, который ждал своего часа в Зеленой Дубраве. Кто командовал этим знаменитым Засадным полком, решившим исход исторического сражения?", options: ["Владимир Серпуховской и Дмитрий Боброк-Волынский", "Иноки Александр Пересвет и Андрей Ослябя", "Московский князь Дмитрий и рязанский князь Олег", "Литовские князья Андрей и Дмитрий Ольгердовичи"], correctIndex: 0, explanation: "Удар свежих сил Засадного полка вызвал панику в рядах Мамая и обратил ордынцев в бегство." }
             ],
             'XV век (Василий II Темный)': [
-                { text: "Первая половина XV века стала тяжелейшим испытанием для Москвы. После смерти Василия I разгорелся династический кризис: право на престол оспорили дядя и племянник, что привело к многолетней разрушительной бойне, разорению городов и вмешательству Орды. Как в историографии называется этот кровавый период?", options: ["Феодальная (Междоусобная) война второй четверти XV века", "Смутное время Московского царства", "Северная война русских княжеств", "Великая феодальная замятня"], correctIndex: 0, explanation: "Конфликт Василия II с Юрием Звенигородским и его сыновьями (Василием Косым и Дмитрием Шемякой) длился с 1425 по 1453 год." },
+                { text: "Первая половина XV века стала тяжелейшим испытанием для Москвы. После смерти Василия I разгорелся династический кризис: право на престол оспорили дядя и племянник, что привело к многолетней разрушительной бойне, разорению городов и вмешательству Орды. Как в историографии называется этот кровавый период?", options: ["Феодальная (Междоусобная) война второй четверти XV века", "Смутное время Московского царства", "Северная война русских княжеств", "Великая феодальная замятня"], correctIndex: 0, explanation: "Конфликт Василия II с Юрием Звенигородским и его сыновьями длился с 1425 по 1453 год." },
                 { text: "Во время междоусобицы князь Василий Васильевич пережил пленение татарами, потерю Москвы и предательство близких. В 1446 году он был захвачен Дмитрием Шемякой в Троице-Сергиевом монастыре и подвергнут жестокой расправе, после чего получил свое историческое прозвище. Какое увечье дало ему прозвище «Темный»?", options: ["Ослепление по приказу Шемяки", "Пожизненное заточение в темной башне", "Потеря правой руки в сражении", "Глухота от контузии при взрыве пушки"], correctIndex: 0, explanation: "Несмотря на слепоту, Василий II смог вернуть себе престол и укрепить единодержавие." },
                 { text: "В 1448 году произошло событие, навсегда изменившее статус русской религии. После того как византийские иерархи подписали Флорентийскую унию с католиками, Василий II отказался принять этот союз. Собор русских епископов самостоятельно, без санкции Константинополя, избрал митрополитом Иону. Что означало это событие для Русской православной церкви?", options: ["Фактическое установление автокефалии (независимости)", "Переход церкви под полный контроль Золотой Орды", "Установление патриаршества на Руси", "Объявление войны Византийской империи"], correctIndex: 0, explanation: "Русская церковь стала автокефальной, что позже породило идеологему «Москва — Третий Рим»." },
                 { text: "Завершение феодальной войны ознаменовало новый этап в централизации власти. Василий II Темный, опираясь на московское боярство и церковь, начал систематически ликвидировать мелкие независимые владения внутри государства. Какую главную внутриполитическую реформу проводил князь в последние годы правления?", options: ["Усиление великокняжеской власти и ликвидация независимых уделов", "Введение выборного демократического веча в Москве", "Передача всех земель в собственность монастырей", "Разделение государства на две независимые половины"], correctIndex: 0, explanation: "Удельные князья были низведены до статуса слуг великого князя, что подготовило почву для создания единого государства." }
@@ -165,12 +164,6 @@
             { title: "Щедрость Земли Русской", description: "Выдался на редкость благоприятный год. Ранняя весна, теплое лето и своевременные дожди привели к колоссальному урожаю на всех московских землях. Амбары ломятся от зерна, ярмарки гудят от обилия товаров. Торговые пошлины текут в столицу рекой, а сытый народ прославляет мудрое правление князя.", deltas: { gold: 15, army: 5, influence: 5, lands: 0 } }
         ];
 
-        while(LOCAL_CRISES.length < 25) { LOCAL_CRISES.push({...LOCAL_CRISES[Math.floor(Math.random() * 5)]}); }
-        while(LOCAL_CHANCES.length < 10) { LOCAL_CHANCES.push({...LOCAL_CHANCES[Math.floor(Math.random() * 5)]}); }
-        Object.keys(LOCAL_QUESTIONS).forEach(key => {
-            while(LOCAL_QUESTIONS[key].length < 15) { LOCAL_QUESTIONS[key].push({...LOCAL_QUESTIONS[key][0]}); }
-        });
-
         const generateTiles = () => {
             const tiles = [];
             for (let i = 0; i < BOARD_SIZE; i++) {
@@ -216,7 +209,8 @@
                 const gameRef = db.collection('games').doc(ROOM_ID);
                 gameRef.get().then(docSnap => {
                     if (!docSnap.exists) {
-                        gameRef.set({ status: 'setup', teams: [], currentTurn: 0, round: 1, eventStatus: 'idle', activeEvent: null });
+                        // Добавили массивы памяти (usedQuestions, usedCrises, usedChances)
+                        gameRef.set({ status: 'setup', teams: [], currentTurn: 0, round: 1, eventStatus: 'idle', activeEvent: null, usedQuestions: [], usedCrises: [], usedChances: [] });
                     }
                 });
                 const unsubscribe = gameRef.onSnapshot((docSnap) => {
@@ -225,22 +219,26 @@
                 return () => unsubscribe();
             }, [user]);
 
+            // Жесткий таймер ровно на 45 секунд, не зависит от часов компьютера
             useEffect(() => {
-                if (!gameState || gameState.eventStatus !== 'active' || !gameState.activeEvent?.expiresAt) {
+                if (!gameState || gameState.eventStatus !== 'active' || !gameState.activeEvent) {
                     setTimeLeft(0);
                     return;
                 }
+                setTimeLeft(45);
                 const interval = setInterval(() => {
-                    const remaining = Math.max(0, Math.floor((gameState.activeEvent.expiresAt - Date.now()) / 1000));
-                    setTimeLeft(remaining);
-                    if (remaining === 0) {
-                        clearInterval(interval);
-                        const currentTeam = gameState.teams[gameState.currentTurn];
-                        if (currentTeam && currentTeam.ownerId === localUserId) handleTimeout();
-                    }
+                    setTimeLeft(prev => {
+                        if (prev <= 1) {
+                            clearInterval(interval);
+                            const currentTeam = gameState.teams[gameState.currentTurn];
+                            if (currentTeam && currentTeam.ownerId === localUserId) handleTimeout();
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
                 }, 1000);
                 return () => clearInterval(interval);
-            }, [gameState?.eventStatus, gameState?.activeEvent?.expiresAt, localUserId]);
+            }, [gameState?.activeEvent?.eventId]);
 
             const updateGame = async (updates) => {
                 await db.collection('games').doc(ROOM_ID).set(updates, { merge: true });
@@ -256,8 +254,15 @@
                 setNewTeamName('');
             };
 
-            const startGame = () => updateGame({ status: 'playing', currentTurn: 0, round: 1, eventStatus: 'idle' });
-            const resetGame = () => updateGame({ status: 'setup', teams: [], currentTurn: 0, round: 1, eventStatus: 'idle', activeEvent: null });
+            const startGame = () => updateGame({ status: 'playing', currentTurn: 0, round: 1, eventStatus: 'idle', usedQuestions: [], usedCrises: [], usedChances: [] });
+            const resetGame = () => updateGame({ status: 'setup', teams: [], currentTurn: 0, round: 1, eventStatus: 'idle', activeEvent: null, usedQuestions: [], usedCrises: [], usedChances: [] });
+
+            // Функция "Умной колоды" - исключает уже сыгранные карточки
+            const pickUnique = (list, usedList, idField) => {
+                let available = list.filter(item => !(usedList || []).includes(item[idField]));
+                if (available.length === 0) available = list; // Если всё сыграли - колода перемешивается заново
+                return available[Math.floor(Math.random() * available.length)];
+            };
 
             const rollDice = async () => {
                 if (gameState.eventStatus !== 'idle') return;
@@ -298,21 +303,31 @@
                     return;
                 }
                 if (tile.type === 'chance') {
-                    const chanceList = LOCAL_CHANCES;
-                    const randomChance = chanceList[Math.floor(Math.random() * chanceList.length)];
-                    await updateGame({ eventStatus: 'outcome', activeEvent: { type: 'chance', ...randomChance } });
+                    const picked = pickUnique(LOCAL_CHANCES, gameState.usedChances, 'title');
+                    await updateGame({ 
+                        eventStatus: 'outcome', 
+                        activeEvent: { type: 'chance', ...picked },
+                        usedChances: [...(gameState.usedChances || []), picked.title]
+                    });
                     return;
                 }
                 if (tile.type === 'crisis') {
-                    const crisisList = LOCAL_CRISES;
-                    const randomCrisis = crisisList[Math.floor(Math.random() * crisisList.length)];
-                    await updateGame({ eventStatus: 'active', activeEvent: { type: 'crisis', ...randomCrisis, expiresAt: Date.now() + 45000 } });
+                    const picked = pickUnique(LOCAL_CRISES, gameState.usedCrises, 'title');
+                    await updateGame({ 
+                        eventStatus: 'active', 
+                        activeEvent: { type: 'crisis', ...picked, eventId: Date.now() },
+                        usedCrises: [...(gameState.usedCrises || []), picked.title]
+                    });
                     return;
                 }
                 if (tile.type === 'question') {
                     const periodQuestions = LOCAL_QUESTIONS[tile.period] || LOCAL_QUESTIONS['Конец XIII века (Даниил Александрович)'];
-                    const randomQuestion = periodQuestions[Math.floor(Math.random() * periodQuestions.length)];
-                    await updateGame({ eventStatus: 'active', activeEvent: { type: 'question', ...randomQuestion, expiresAt: Date.now() + 45000 } });
+                    const picked = pickUnique(periodQuestions, gameState.usedQuestions, 'text');
+                    await updateGame({ 
+                        eventStatus: 'active', 
+                        activeEvent: { type: 'question', ...picked, eventId: Date.now() },
+                        usedQuestions: [...(gameState.usedQuestions || []), picked.text]
+                    });
                     return;
                 }
             };
@@ -507,7 +522,7 @@
                                     {renderStatBar(team.stats.gold, '💰', 'Казна', '#ffd700')}
                                     {renderStatBar(team.stats.army, '🛡️', 'Дружина', '#dc2626')}
                                     {renderStatBar(team.stats.influence, '👑', 'Влияние', '#a855f7')}
-                                    {renderStatBar(team.stats.lands, '🗺️', 'Земли', '#22c55e')}
+                                    {renderStatBar(team.stats.lands, '🗺️️', 'Земли', '#22c55e')}
                                 </div>
                             ))}
                         </div>
@@ -517,10 +532,8 @@
                     {gameState.eventStatus === 'active' && gameState.activeEvent && (
                         <div className={`fixed inset-0 z-50 flex flex-col lg:flex-row items-center justify-center p-2 lg:p-8 transition-all duration-500 ${gameState.activeEvent.type === 'crisis' ? 'crisis-bg backdrop-blur-sm animate-crisis' : 'bg-black/80 backdrop-blur-md'}`}>
                             
-                            {/* Главный блок с текстом */}
                             <div className={`max-w-3xl w-full flex flex-col max-h-[85vh] relative overflow-hidden shadow-2xl ${gameState.activeEvent.type === 'crisis' ? 'bg-[#0a0000] border-[4px] lg:border-[8px] border-red-700' : 'bg-[#110b08] border border-[#b8860b] rounded-sm'}`}>
                                 
-                                {/* Header Модалки */}
                                 <div className={`p-4 lg:p-6 text-center shrink-0 relative ${gameState.activeEvent.type === 'crisis' ? 'bg-gradient-to-b from-red-900 to-red-950 border-b-4 border-red-700' : 'bg-[#1a120d] border-b border-[#3d2b1f]'}`}>
                                     <h3 className={`text-2xl lg:text-3xl font-black uppercase tracking-widest font-display drop-shadow-md ${gameState.activeEvent.type === 'crisis' ? 'text-[#ffcccc] tracking-[0.2em]' : 'text-[#ffd700]'}`}>
                                         {gameState.activeEvent.type === 'crisis' ? '⚠️ ИСТОРИЧЕСКИЙ КРИЗИС' : '📜 СТРАНИЦА ЛЕТОПИСИ'}
@@ -530,8 +543,7 @@
                                     </h4>
                                 </div>
                                 
-                                {/* Прокручиваемое тело окна */}
-                                <div className={`p-4 lg:p-8 overflow-y-auto ${gameState.activeEvent.type === 'crisis' ? 'bg-[#0a0000]' : 'bg-[#110b08]'}`}>
+                                <div className={`p-4 lg:p-8 overflow-y-auto ${gameState.activeEvent.type === 'crisis' ? 'bg-[#0a0000] crisis-scroll' : 'bg-[#110b08]'}`}>
                                     <p className={`text-lg lg:text-xl leading-relaxed mb-6 font-serif border-l-4 lg:border-l-8 pl-4 lg:pl-6 ${gameState.activeEvent.type === 'crisis' ? 'text-red-50 border-red-700' : 'text-[#f4e4c1] border-[#b8860b] italic'}`}>
                                         "{gameState.activeEvent.description || gameState.activeEvent.text}"
                                     </p>
