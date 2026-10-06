@@ -31,10 +31,10 @@
         .crisis-bg {
             background: repeating-linear-gradient(
                 -45deg,
-                rgba(0, 0, 0, 0.2),
-                rgba(0, 0, 0, 0.2) 10px,
-                rgba(220, 38, 38, 0.05) 10px,
-                rgba(220, 38, 38, 0.05) 20px
+                rgba(0, 0, 0, 0.4),
+                rgba(0, 0, 0, 0.4) 10px,
+                rgba(220, 38, 38, 0.1) 10px,
+                rgba(220, 38, 38, 0.1) 20px
             );
         }
         .wood-texture {
@@ -48,9 +48,121 @@
         }
         .animate-crisis { animation: pulse-red 2s infinite; }
         
-        /* Скроллбар */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #17100b; }
+        /* Скроллбар для длинных текстов в модалке */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #b8860b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #daa520; }
+        
+        /* Красный скроллбар для кризисов */
+        .crisis-scroll::-webkit-scrollbar-thumb { background: #dc2626; }
+        .crisis-scroll::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+    </style>
+</head>
+<body class="wood-texture min-h-screen">
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCfmZVFeyQRE6QGJyC06N5a0OXtgsZ9s4Y",
+            authDomain: "moscow-30572.firebaseapp.com",
+            projectId: "moscow-30572",
+            storageBucket: "moscow-30572.firebasestorage.app",
+            messagingSenderId: "835968943183",
+            appId: "1:835968943183:web:4a4785657f24f17da6963a",
+            measurementId: "G-16M9LFSV4H"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const ROOM_ID = 'moscow_main_hall';
+
+        const INITIAL_STATS = { gold: 50, army: 50, influence: 50, lands: 10 };
+        const TEAM_COLORS = ['bg-red-700', 'bg-blue-800', 'bg-emerald-700', 'bg-purple-800'];
+        const BOARD_SIZE = 40;
+
+        // Расширенные базы данных
+        const LOCAL_QUESTIONS = {
+            'Конец XIII века (Даниил Александрович)': [
+                { text: "В конце XIII века Московское княжество было небольшим и слабым уделом, выделенным младшему сыну Александра Невского. Однако князь Даниил Александрович начал политику неуклонного собирания земель, умело используя дипломатию и силу. Какой стратегически важный город, расположенный при впадении Москвы-реки в Оку, был присоединен к Москве первым в 1301 году, открыв путь к дальнейшей экспансии и контролю над речными торговыми путями?", options: ["Коломна", "Владимир", "Тверь", "Нижний Новгород"], correctIndex: 0, explanation: "Присоединение Коломны стало первым шагом Москвы к статусу великого княжества, удвоив ее территорию." },
+                { text: "Князь Даниил стремился укрепить не только военную, но и духовную мощь своей столицы. Около 1282 года к югу от Москвы он основал монастырь, который стал важнейшим форпостом на подступах к городу. В каком году этот первый московский монастырь, названный Даниловым, был официально заложен?", options: ["1282", "1295", "1300", "1310"], correctIndex: 0, explanation: "Данилов монастырь считается первой и старейшей обителью Москвы, игравшей роль крепости-стража." },
+                { text: "Экономическое возвышение Москвы было неразрывно связано с ее географией. Город располагался на пересечении волоков и речных путей, связывающих Новгород с Рязанью и южными землями. Какая река, давшая имя городу, обеспечивала это ключевое торговое и стратегическое преимущество в эпоху первых московских князей?", options: ["Москва-река", "Волга", "Ока", "Клязьма"], correctIndex: 0, explanation: "Москва-река была главной транспортной артерией, позволяя контролировать товарооборот между севером и югом." },
+                { text: "Становление Москвы сопровождалось жестокой политической борьбой с могущественными соседями. В конце XIII - начале XIV века московские князья вступили в затяжной конфликт за право обладать ярлыком на великое княжение Владимирское. Какое княжество выступало главным, наиболее сильным соперником Москвы в этот исторический период?", options: ["Тверское княжество", "Рязанское княжество", "Владимирское княжество", "Суздальское княжество"], correctIndex: 0, explanation: "Тверь, опираясь на сильную экономику и поддержку Орды, десятилетиями оспаривала лидерство у Москвы." }
+            ],
+            'Первая половина XIV века (Иван Калита)': [
+                { text: "Эпоха правления Ивана I вошла в историю как время небывалого финансового и политического укрепления Москвы. Этот князь умело собирал дань для Орды, оставляя значительную часть средств в своей казне, за что и получил знаменитое прозвище. Какое именно слово, означающее объемный кожаный мешок для денег, стало историческим именем князя?", options: ["Калита", "Грозный", "Правдивый", "Окаянный"], correctIndex: 0, explanation: "Калита — кошель или сумка. Эти накопленные средства позволили Москве скупать новые земли и города." },
+                { text: "Политический триумф Ивана Калиты был бы невозможен без мощной идеологической и духовной поддержки. Понимая значение церкви в объединении русских земель, князь убедил главу русской православной церкви перенести свою резиденцию из разрушенного Киева (через Владимир) в Москву. В каком году митрополит Петр официально обосновался в Москве?", options: ["1325", "1303", "1340", "1380"], correctIndex: 0, explanation: "С 1325 года Москва стала не только политическим, но и духовным центром всей Руси." },
+                { text: "Во время правления хана Узбека в Золотой Орде Иван Калита смог добиться исключительных привилегий для Москвы. Он подавил антиордынское восстание в Твери, заслужив доверие хана. Какое важнейшее финансово-административное право, навсегда изменившее баланс сил на Руси, Иван Калита получил от хана Узбека?", options: ["Право самостоятельного сбора дани со всей Руси", "Титул независимого царя всея Руси", "Право объявлять крестовые походы на Литву", "Полное освобождение Москвы от уплаты налогов"], correctIndex: 0, explanation: "Сбор ордынского выхода (дани) своими руками избавил Русь от произвола баскаков и обогатил московскую казну." },
+                { text: "Чтобы закрепить статус духовной столицы, Иван Калита начал масштабное каменное строительство в Кремле. 4 августа 1326 года, по совету митрополита Петра, был заложен главный храм будущего Российского государства. Как назывался этот собор, ставший усыпальницей московских святителей и патриархов?", options: ["Успенский собор", "Архангельский собор", "Благовещенский собор", "Иван Великий"], correctIndex: 0, explanation: "Белокаменный Успенский собор стал смысловым ядром Кремля и всей Русской православной церкви." }
+            ],
+            'Вторая половина XIV века (Дмитрий Донской)': [
+                { text: "Вторая половина XIV века ознаменовалась открытым противостоянием Московской Руси и Золотой Орды. Кульминацией этого конфликта стала грандиозная битва на Дону, где объединенное русское войско бросило вызов темнику Мамаю. Какая битва, состоявшаяся 8 сентября 1380 года, навсегда развеяла миф о непобедимости татаро-монгольских войск?", options: ["Куликовская битва", "Ледовое побоище", "Битва на реке Воже", "Стояние на Угре"], correctIndex: 0, explanation: "Победа на Куликовом поле стала символом национального возрождения, хотя иго продлилось еще сто лет." },
+                { text: "Перед тем как вывести войска навДействительно, на скриншоте[cite: 5] видно, что из-за объемного исторического текста и крупных шрифтов окно просто не поместилось на экране, и нижние кнопки оказались обрезаны. На телефонах это стало бы еще большей проблемой.
+
+Мы это исправим! Я добавил **прокрутку внутри окна** (теперь текст никогда не вылезет за пределы экрана, даже на старых телефонах) и немного оптимизировал размеры шрифтов для мобильных устройств. 
+
+Таймер я **вынес в отдельный огромный блок**. На компьютерах он будет гордо стоять справа от вопроса, а на телефонах — аккуратно разместится снизу, чтобы всегда быть на виду и создавать нужное напряжение!
+
+Скопируйте этот обновленный код и замените им содержимое файла `index.html`:
+
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Возвышение Москвы</title>
+    
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script crossorigin src="[https://unpkg.com/react@18/umd/react.production.min.js](https://unpkg.com/react@18/umd/react.production.min.js)"></script>
+    <script crossorigin src="[https://unpkg.com/react-dom@18/umd/react-dom.production.min.js](https://unpkg.com/react-dom@18/umd/react-dom.production.min.js)"></script>
+    <script src="[https://unpkg.com/@babel/standalone/babel.min.js](https://unpkg.com/@babel/standalone/babel.min.js)"></script>
+    
+    <script src="[https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js](https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js)"></script>
+    <script src="[https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js](https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js)"></script>
+    <script src="[https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js](https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js)"></script>
+
+    <style>
+        @import url('[https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap](https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap)');
+        
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #080504; 
+            color: #f4e4c1; 
+            overflow-x: hidden;
+        }
+        .font-serif { font-family: 'Cinzel', serif; }
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-condensed { font-family: 'Roboto Condensed', sans-serif; }
+        
+        /* Стилизация для кризисов в духе суровой плакатной графики */
+        .crisis-bg {
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(0, 0, 0, 0.2),
+                rgba(0, 0, 0, 0.2) 10px,
+                rgba(220, 38, 38, 0.05) 10px,
+                rgba(220, 38, 38, 0.05) 20px
+            );
+        }
+        .wood-texture {
+            background-image: url('[https://www.transparenttextures.com/patterns/wood-pattern.png](https://www.transparenttextures.com/patterns/wood-pattern.png)');
+        }
+        
+        /* Анимации */
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 0 50px rgba(220, 38, 38, 0.8); }
+        }
+        .animate-crisis { animation: pulse-red 2s infinite; }
+        
+        /* Скроллбар для модальных окон */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #110b08; border-radius: 4px;}
         ::-webkit-scrollbar-thumb { background: #b8860b; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #daa520; }
     </style>
@@ -166,7 +278,6 @@
             { title: "Щедрость Земли Русской", description: "Выдался на редкость благоприятный год. Ранняя весна, теплое лето и своевременные дожди привели к колоссальному урожаю на всех московских землях. Амбары ломятся от зерна, ярмарки гудят от обилия товаров. Торговые пошлины текут в столицу рекой, а сытый народ прославляет мудрое правление князя.", deltas: { gold: 15, army: 5, influence: 5, lands: 0 } }
         ];
 
-        // Дополняем массивы для нужного объема (дублирование для демо, в реальности можно прописать все 60/25/10)
         while(LOCAL_CRISES.length < 25) { LOCAL_CRISES.push({...LOCAL_CRISES[Math.floor(Math.random() * 5)]}); }
         while(LOCAL_CHANCES.length < 10) { LOCAL_CHANCES.push({...LOCAL_CHANCES[Math.floor(Math.random() * 5)]}); }
         Object.keys(LOCAL_QUESTIONS).forEach(key => {
@@ -420,7 +531,6 @@
 
             return (
                 <div className="min-h-screen flex flex-col p-2 lg:p-6 text-[#f4e4c1] relative">
-                    {/* Хедер */}
                     <div className="flex justify-between items-center mb-6 bg-gradient-to-r from-[#110b08] via-[#1a120d] to-[#110b08] p-5 border border-[#3d2b1f] shadow-[0_4px_20px_rgba(0,0,0,0.5)] rounded-sm">
                         <div className="flex items-center gap-4"><span className="text-4xl drop-shadow-[0_0_10px_rgba(184,134,11,0.5)]">👑</span><h1 className="text-3xl font-display font-black text-[#ffd700] uppercase tracking-widest hidden md:block drop-shadow-md">Возвышение Москвы</h1></div>
                         <div className="text-center font-display flex flex-col items-center">
@@ -430,9 +540,7 @@
                         <button onClick={resetGame} className="text-xs border border-[#3d2b1f] text-[#a07c5a] px-4 py-2 hover:bg-[#3d2b1f] hover:text-[#f4e4c1] uppercase font-condensed font-bold transition-colors rounded-sm tracking-wider">Сбросить Летопись</button>
                     </div>
 
-                    {/* Игровое поле и панели */}
                     <div className="flex-1 max-w-[1700px] w-full mx-auto grid grid-cols-1 xl:grid-cols-4 gap-8 relative">
-                        {/* Левая панель игроков */}
                         <div className="xl:col-span-1 space-y-6 order-2 xl:order-1 flex flex-row xl:flex-col overflow-x-auto xl:overflow-visible pb-2">
                             {gameState.teams.slice(0, 2).map((team, idx) => (
                                 <div key={team.id} className={`min-w-[280px] flex-1 bg-gradient-to-b from-[#17100b] to-[#110b08] border-2 p-5 rounded-sm transition-all duration-500 relative overflow-hidden ${idx === gameState.currentTurn ? 'border-[#b8860b] shadow-[0_0_30px_rgba(184,134,11,0.15)] scale-105 z-10' : 'border-[#2a1d15]'}`}>
@@ -450,11 +558,9 @@
                             ))}
                         </div>
 
-                        {/* Центральная доска */}
                         <div className="xl:col-span-2 order-1 xl:order-2 flex justify-center items-center p-2 relative">
                             <div className="relative w-full max-w-[850px] aspect-square bg-[#0c0806] border-[8px] border-[#2a1d15] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.8)] rounded-md">
                                 <div className="w-full h-full relative border border-[#3d2b1f] bg-[#110b08]">
-                                    {/* Центр поля с кнопкой кубика */}
                                     <div className="absolute inset-[16%] bg-gradient-to-br from-[#0a0604] to-[#17100b] border-4 border-[#2a1d15] shadow-inner flex flex-col items-center justify-center p-6 rounded-sm">
                                         <div className="z-10 bg-[#110b08]/90 p-8 border border-[#3d2b1f] shadow-2xl w-full max-w-md text-center backdrop-blur-sm relative overflow-hidden">
                                             <div className="absolute top-0 left-0 w-full h-1 bg-[#b8860b] opacity-50"></div>
@@ -475,7 +581,6 @@
                                         </div>
                                     </div>
                                     
-                                    {/* Отрисовка клеток */}
                                     {TILES.map((tile, i) => {
                                         const pos = getPawnPosition(i, 0); 
                                         let bgColor = 'bg-[#17100b]';
@@ -494,7 +599,6 @@
                                         )
                                     })}
                                     
-                                    {/* Фишки команд */}
                                     {gameState.teams.map((team, idx) => (
                                         <div key={team.id} className={`absolute w-[5%] h-[5%] md:w-[4%] md:h-[4%] ${team.color} rounded-sm border-2 border-[#ffd700] shadow-[0_0_10px_rgba(0,0,0,0.8)] z-20 transition-all duration-1000 ease-in-out transform hover:scale-125`} style={{ left: getPawnPosition(team.position, idx).left, top: getPawnPosition(team.position, idx).top }} title={team.name}>
                                             <div className="w-full h-full border border-black/50 inset-0 absolute"></div>
@@ -504,7 +608,6 @@
                             </div>
                         </div>
 
-                        {/* Правая панель игроков */}
                         <div className="xl:col-span-1 space-y-6 order-3 flex flex-row xl:flex-col overflow-x-auto xl:overflow-visible pt-2">
                             {gameState.teams.slice(2, 4).map((team, idx) => (
                                 <div key={team.id} className={`min-w-[280px] flex-1 bg-gradient-to-b from-[#17100b] to-[#110b08] border-2 p-5 rounded-sm transition-all duration-500 relative overflow-hidden ${idx+2 === gameState.currentTurn ? 'border-[#b8860b] shadow-[0_0_30px_rgba(184,134,11,0.15)] scale-105 z-10' : 'border-[#2a1d15]'}`}>
@@ -523,78 +626,81 @@
                         </div>
                     </div>
 
-                    {/* МОДАЛЬНОЕ ОКНО ВОПРОСА / КРИЗИСА */}
+                    {/* МОДАЛЬНОЕ ОКНО ВОПРОСА / КРИЗИСА С ОТДЕЛЬНЫМ ТАЙМЕРОМ */}
                     {gameState.eventStatus === 'active' && gameState.activeEvent && (
-                        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-500 ${gameState.activeEvent.type === 'crisis' ? 'crisis-bg backdrop-blur-sm animate-crisis' : 'bg-black/80 backdrop-blur-md'}`}>
+                        <div className={`fixed inset-0 z-50 flex flex-col lg:flex-row items-center justify-center p-2 lg:p-8 transition-all duration-500 ${gameState.activeEvent.type === 'crisis' ? 'crisis-bg backdrop-blur-sm animate-crisis' : 'bg-black/80 backdrop-blur-md'}`}>
                             
-                            <div className={`max-w-4xl w-full relative overflow-hidden shadow-2xl ${gameState.activeEvent.type === 'crisis' ? 'bg-[#0a0000] border-[12px] border-red-700' : 'bg-[#110b08] border border-[#b8860b] rounded-sm'}`}>
+                            {/* Главный блок с текстом */}
+                            <div className={`max-w-3xl w-full flex flex-col max-h-[85vh] relative overflow-hidden shadow-2xl ${gameState.activeEvent.type === 'crisis' ? 'bg-[#0a0000] border-[4px] lg:border-[8px] border-red-700' : 'bg-[#110b08] border border-[#b8860b] rounded-sm'}`}>
                                 
                                 {/* Header Модалки */}
-                                <div className={`p-8 text-center relative ${gameState.activeEvent.type === 'crisis' ? 'bg-gradient-to-b from-red-900 to-red-950 border-b-4 border-red-700' : 'bg-[#1a120d] border-b border-[#3d2b1f]'}`}>
-                                    
-                                    <h3 className={`text-4xl font-black uppercase tracking-widest font-display drop-shadow-md ${gameState.activeEvent.type === 'crisis' ? 'text-[#ffcccc] tracking-[0.2em]' : 'text-[#ffd700]'}`}>
+                                <div className={`p-4 lg:p-6 text-center shrink-0 relative ${gameState.activeEvent.type === 'crisis' ? 'bg-gradient-to-b from-red-900 to-red-950 border-b-4 border-red-700' : 'bg-[#1a120d] border-b border-[#3d2b1f]'}`}>
+                                    <h3 className={`text-2xl lg:text-3xl font-black uppercase tracking-widest font-display drop-shadow-md ${gameState.activeEvent.type === 'crisis' ? 'text-[#ffcccc] tracking-[0.2em]' : 'text-[#ffd700]'}`}>
                                         {gameState.activeEvent.type === 'crisis' ? '⚠️ ИСТОРИЧЕСКИЙ КРИЗИС' : '📜 СТРАНИЦА ЛЕТОПИСИ'}
                                     </h3>
-                                    
-                                    <h4 className={`text-xl font-bold mt-3 font-condensed tracking-wider ${gameState.activeEvent.type === 'crisis' ? 'text-white uppercase' : 'text-[#b8860b]'}`}>
+                                    <h4 className={`text-lg lg:text-xl font-bold mt-2 font-condensed tracking-wider ${gameState.activeEvent.type === 'crisis' ? 'text-white uppercase' : 'text-[#b8860b]'}`}>
                                         {gameState.activeEvent.title || gameState.activeEvent.period}
                                     </h4>
-                                    
-                                    <div className={`absolute top-1/2 -translate-y-1/2 right-6 px-6 py-3 border shadow-inner flex gap-3 items-center ${gameState.activeEvent.type === 'crisis' ? 'bg-red-950 border-red-500 text-red-100' : 'bg-[#080504] border-[#b8860b] text-[#f4e4c1]'}`}>
-                                        <span className={timeLeft <= 10 ? 'text-red-500 animate-pulse text-2xl' : 'text-xl'}>⏳</span>
-                                        <span className={`font-mono text-3xl font-black tracking-widest ${timeLeft <= 10 ? 'text-red-500' : ''}`}>{timeLeft}</span>
-                                    </div>
                                 </div>
                                 
-                                {/* Тело Модалки */}
-                                <div className={`p-10 ${gameState.activeEvent.type === 'crisis' ? 'bg-[#0a0000]' : 'bg-[#110b08]'}`}>
-                                    <p className={`text-2xl leading-relaxed mb-10 font-serif border-l-8 pl-6 ${gameState.activeEvent.type === 'crisis' ? 'text-red-50 border-red-700' : 'text-[#f4e4c1] border-[#b8860b] italic'}`}>
+                                {/* Прокручиваемое тело окна */}
+                                <div className={`p-4 lg:p-8 overflow-y-auto ${gameState.activeEvent.type === 'crisis' ? 'bg-[#0a0000]' : 'bg-[#110b08]'}`}>
+                                    <p className={`text-lg lg:text-xl leading-relaxed mb-6 font-serif border-l-4 lg:border-l-8 pl-4 lg:pl-6 ${gameState.activeEvent.type === 'crisis' ? 'text-red-50 border-red-700' : 'text-[#f4e4c1] border-[#b8860b] italic'}`}>
                                         "{gameState.activeEvent.description || gameState.activeEvent.text}"
                                     </p>
                                     
-                                    <div className="grid gap-5">
+                                    <div className="grid gap-3 lg:gap-5">
                                         {gameState.activeEvent.type === 'question' && gameState.activeEvent.options.map((opt, idx) => (
-                                            <button key={idx} onClick={() => submitAnswer(idx)} disabled={!isMyTurn} className="p-5 bg-[#1a120d] border border-[#3d2b1f] hover:border-[#ffd700] hover:bg-[#2a1d15] hover:shadow-[0_0_15px_rgba(184,134,11,0.2)] text-left text-xl font-bold text-[#f4e4c1] disabled:opacity-50 transition-all rounded-sm font-condensed tracking-wide">
-                                                <span className="text-[#b8860b] mr-3">{idx + 1}.</span> {opt}
+                                            <button key={idx} onClick={() => submitAnswer(idx)} disabled={!isMyTurn} className="p-3 lg:p-4 bg-[#1a120d] border border-[#3d2b1f] hover:border-[#ffd700] hover:bg-[#2a1d15] hover:shadow-[0_0_15px_rgba(184,134,11,0.2)] text-left text-base lg:text-lg font-bold text-[#f4e4c1] disabled:opacity-50 transition-all rounded-sm font-condensed tracking-wide">
+                                                <span className="text-[#b8860b] mr-2 lg:mr-3">{idx + 1}.</span> {opt}
                                             </button>
                                         ))}
                                         
                                         {gameState.activeEvent.type === 'crisis' && gameState.activeEvent.options.map((opt, idx) => (
-                                            <button key={idx} onClick={() => submitCrisisChoice(idx)} disabled={!isMyTurn} className="relative overflow-hidden group p-6 bg-[#1a0000] border-2 border-red-900 hover:border-red-500 hover:bg-red-950 text-left disabled:opacity-50 transition-all shadow-lg">
+                                            <button key={idx} onClick={() => submitCrisisChoice(idx)} disabled={!isMyTurn} className="relative overflow-hidden group p-4 lg:p-5 bg-[#1a0000] border-2 border-red-900 hover:border-red-500 hover:bg-red-950 text-left disabled:opacity-50 transition-all shadow-lg">
                                                 <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(220,38,38,0.03)_10px,rgba(220,38,38,0.03)_20px)] pointer-events-none"></div>
-                                                <span className="block text-2xl font-black text-white mb-2 uppercase font-display tracking-widest relative z-10 group-hover:text-[#ffcccc]">{opt.text}</span>
-                                                <span className="block text-base text-red-400 uppercase font-bold font-condensed tracking-widest relative z-10">Цена решения: {opt.risk}</span>
+                                                <span className="block text-lg lg:text-xl font-black text-white mb-1 lg:mb-2 uppercase font-display tracking-widest relative z-10 group-hover:text-[#ffcccc]">{opt.text}</span>
+                                                <span className="block text-sm lg:text-base text-red-400 uppercase font-bold font-condensed tracking-widest relative z-10">Цена решения: {opt.risk}</span>
                                             </button>
                                         ))}
                                     </div>
-                                    {!isMyTurn && <p className={`text-center mt-8 uppercase font-bold text-lg tracking-[0.2em] animate-pulse ${gameState.activeEvent.type === 'crisis' ? 'text-red-500' : 'text-[#b8860b]'}`}>Ожидание решения правящего князя...</p>}
+                                    {!isMyTurn && <p className={`text-center mt-6 uppercase font-bold text-sm lg:text-base tracking-[0.2em] animate-pulse ${gameState.activeEvent.type === 'crisis' ? 'text-red-500' : 'text-[#b8860b]'}`}>Ожидание решения правящего князя...</p>}
                                 </div>
                             </div>
+
+                            {/* ОГРОМНЫЙ ТАЙМЕР СБОКУ */}
+                            <div className="mt-4 lg:mt-0 lg:ml-12 flex flex-col items-center justify-center shrink-0">
+                                <div className={`flex flex-row lg:flex-col items-center justify-center gap-4 lg:gap-0 p-4 lg:p-8 rounded-2xl bg-[#080504]/90 border-2 ${timeLeft <= 10 ? 'border-red-700 shadow-[0_0_40px_rgba(239,68,68,0.4)]' : 'border-[#b8860b] shadow-[0_0_30px_rgba(184,134,11,0.2)]'} backdrop-blur-md`}>
+                                    <span className={`text-4xl lg:text-6xl ${timeLeft <= 10 ? 'text-red-500 animate-pulse drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]' : 'text-[#b8860b] drop-shadow-[0_0_15px_rgba(184,134,11,0.5)]'} lg:mb-2`}>⏱️</span>
+                                    <span className={`font-mono text-5xl lg:text-8xl font-black tracking-widest drop-shadow-2xl ${timeLeft <= 10 ? 'text-red-500' : 'text-[#ffd700]'}`}>{timeLeft}</span>
+                                </div>
+                            </div>
+
                         </div>
                     )}
 
                     {/* МОДАЛЬНОЕ ОКНО ИСХОДА */}
                     {gameState.eventStatus === 'outcome' && gameState.activeEvent && (
                         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                            <div className="max-w-2xl w-full bg-[#110b08] border-2 border-[#b8860b] shadow-[0_0_50px_rgba(184,134,11,0.2)] rounded-sm overflow-hidden">
-                                <div className="p-8 text-center border-b border-[#3d2b1f] bg-[#1a120d] relative">
-                                    <h3 className="text-3xl font-black uppercase text-[#ffd700] font-display tracking-widest">{gameState.activeEvent.title}</h3>
+                            <div className="max-w-2xl w-full bg-[#110b08] border-2 border-[#b8860b] shadow-[0_0_50px_rgba(184,134,11,0.2)] rounded-sm overflow-hidden max-h-[90vh] flex flex-col">
+                                <div className="p-6 lg:p-8 text-center border-b border-[#3d2b1f] bg-[#1a120d] shrink-0">
+                                    <h3 className="text-2xl lg:text-3xl font-black uppercase text-[#ffd700] font-display tracking-widest">{gameState.activeEvent.title}</h3>
                                 </div>
-                                <div className="p-10">
-                                    <p className="text-xl text-[#f4e4c1] mb-10 font-serif leading-relaxed text-center">{gameState.activeEvent.message || gameState.activeEvent.story}</p>
+                                <div className="p-6 lg:p-10 overflow-y-auto">
+                                    <p className="text-lg lg:text-xl text-[#f4e4c1] mb-8 lg:mb-10 font-serif leading-relaxed text-center">{gameState.activeEvent.message || gameState.activeEvent.story}</p>
                                     
                                     {gameState.activeEvent.deltas && (
-                                        <div className="grid grid-cols-4 gap-4 mb-10">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 lg:mb-10">
                                             {[ { key: 'gold', label: 'КАЗНА', icon: '💰' }, { key: 'army', label: 'ДРУЖИНА', icon: '🛡️' }, { key: 'influence', label: 'ВЛИЯНИЕ', icon: '👑' }, { key: 'lands', label: 'ЗЕМЛИ', icon: '🗺️' } ].map(stat => {
                                                 const val = gameState.activeEvent.deltas[stat.key];
                                                 if (val === undefined || val === null) return null;
                                                 const isPositive = val > 0;
                                                 const isZero = val === 0;
                                                 return (
-                                                    <div key={stat.key} className="bg-[#080504] p-4 border border-[#3d2b1f] text-center rounded-sm shadow-inner relative overflow-hidden">
-                                                        <div className="text-3xl mb-3 drop-shadow-md">{stat.icon}</div>
-                                                        <div className="text-xs text-[#a07c5a] uppercase font-bold font-condensed tracking-widest mb-1">{stat.label}</div>
-                                                        <div className={`text-2xl font-black font-serif ${isPositive ? 'text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.5)]' : isZero ? 'text-[#f4e4c1]' : 'text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]'}`}>
+                                                    <div key={stat.key} className="bg-[#080504] p-3 lg:p-4 border border-[#3d2b1f] text-center rounded-sm shadow-inner relative overflow-hidden">
+                                                        <div className="text-2xl lg:text-3xl mb-2 lg:mb-3 drop-shadow-md">{stat.icon}</div>
+                                                        <div className="text-[10px] lg:text-xs text-[#a07c5a] uppercase font-bold font-condensed tracking-widest mb-1">{stat.label}</div>
+                                                        <div className={`text-xl lg:text-2xl font-black font-serif ${isPositive ? 'text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.5)]' : isZero ? 'text-[#f4e4c1]' : 'text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]'}`}>
                                                             {isPositive ? '+' : ''}{val}
                                                         </div>
                                                     </div>
@@ -603,7 +709,7 @@
                                         </div>
                                     )}
                                     {isMyTurn ? (
-                                        <button onClick={completeTurn} className="w-full bg-gradient-to-r from-[#b8860b] to-[#daa520] hover:from-[#daa520] hover:to-[#b8860b] text-[#080504] py-5 font-black uppercase tracking-[0.2em] text-xl font-display transition-all shadow-[0_0_15px_rgba(184,134,11,0.4)] rounded-sm">Продолжить Путь</button>
+                                        <button onClick={completeTurn} className="w-full bg-gradient-to-r from-[#b8860b] to-[#daa520] hover:from-[#daa520] hover:to-[#b8860b] text-[#080504] py-4 lg:py-5 font-black uppercase tracking-[0.2em] text-lg lg:text-xl font-display transition-all shadow-[0_0_15px_rgba(184,134,11,0.4)] rounded-sm">Продолжить Путь</button>
                                     ) : (
                                         <p className="text-center text-[#a07c5a] uppercase font-bold tracking-widest font-condensed">Ожидание активного игрока...</p>
                                     )}
@@ -616,7 +722,7 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<App/>);
     </script>
 </body>
 </html>
